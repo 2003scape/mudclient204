@@ -1,0 +1,38 @@
+hash         collision        use
+281719196    advance.pcm      when a skill levels up
+-2055242872  anvil.pcm        smithing an item from bars
+583574622    chisel.pcm       
+-1644705092  click.pcm        equipping/switching equipped items
+-794191332   closedoor.pcm    closing a door
+-58020302    coins.pcm        buying things from shop (selling too?)
+-1803016222  combat1a.pcm     pretty sure all the combat sounds depend on armour
+-1789170381  combat1b.pcm     but the b one looks to be when you take damage as opposed to a 0 hit
+-958419921   combat2a.pcm     mail clanking
+-944574080   combat2b.pcm     
+-113823620   combat3a.pcm     more grunting
+-99977779    combat3b.pcm     
+-503721012   cooking.pcm      when you start cooking, regardless of success
+1011236428   death.pcm        when you die
+206547322    dropobject.pcm   droppigng an item
+2113588344   eat.pcm          eating any food
+1739029983   filljug.pcm      filling a vial from fountain, milk from cows etc
+-1739494056  fish.pcm         when you start fishing, regardless of success
+1464421627   mechanical.pcm   pottery wheel, spinning wheel etc
+-1331683753  mine.pcm         mining, when you hit the rock regardless
+181941996    mix.pcm          making a potion from herbs
+90965556     opendoor.pcm     opening a door or gate
+1583524721   outofammo.pcm    Trying to range when out of ammo
+-714130183   potato.pcm       
+305280844    prayeroff.pcm    obvious
+392086718    prayeron.pcm     obvious
+-1517451494  prospect.pcm     prospecting a rock
+987662119    recharge.pcm     recharging prayer at an altar?
+-1857503751  retreat.pcm      when you run from combat
+-76182372    secretdoor.pcm   edgeville dungeon secret door
+1996669315   shoot.pcm        shooting an arrow/bow
+2120975450   spellfail.pcm    obvious
+1249701696   spellok.pcm      when a spell succeeds (even hitting 0)
+-1186349966  takeobject.pcm   when you pick up an item from the group
+-1448150580  underattack.pcm  when you get attacked by an npc ie, when you get aggro or when they re-engage after you retreat
+-318268426   victory.pcm      when you kill an npc (and someone else?)
+1915154831   foundgem.pcm     weird two tone ding

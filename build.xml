@@ -1,0 +1,26 @@
+<project name="mudclient204" default="dist" basedir=".">
+    <property name="src" location="src" />
+    <property name="build" location="build" />
+
+    <target name="init">
+        <mkdir dir="${build}" />
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="${src}" destdir="${build}">
+            <compilerarg line="-encoding UTF-8" />
+        </javac>
+    </target>
+
+    <target name="dist" depends="compile">
+        <jar jarfile="./mudclient204.jar" basedir="${build}">
+            <manifest>
+                <attribute name="Main-Class" value="mudclient" />
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build}" />
+    </target>
+</project>

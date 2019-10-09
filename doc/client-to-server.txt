@@ -1,0 +1,274 @@
+CL_SESSION(32) {
+	byte unknown {
+		usernameHash >> 16 & 31L
+	}
+}
+
+CL_LOGIN(0) {
+	short clientVersion
+	byte limit30
+	byte[] rsa {
+		byte (10)
+		int random
+		int random2
+		int sessionId >> 32
+		int sessionId
+		int linkUID
+		string username
+		string password
+	}
+}
+
+CL_CLOSE_CONNECTION(31) {
+}
+
+CL_PING(67) {
+}
+
+CL_PRIVACY_SETTINGS(64) {
+	byte blockChat
+	byte blockPM
+	byte blockTrades
+	byte blockDuels
+}
+
+CL_IGNORE_ADD(132) {
+	long usernameHash
+}
+
+CL_IGNORE_REMOVE(241) {
+	long usernameHash
+}
+
+CL_FRIEND_ADD(195) {
+	long usernameHash
+}
+
+CL_FRIEND_REMOVE(167) {
+	long usernameHash
+}
+
+CL_PM(218) {
+	long usernameHash
+	byte[] message
+}
+
+CL_CHAT(216) {
+	byte[] message
+}
+
+CL_COMMAND(38) {
+	string command
+}
+
+CL_BANK_WITHDRAW(22) {
+	short slot
+	short amount
+	int trap (0x12345678)
+}
+
+CL_BANK_DEPOSIT(23) {
+	short slot
+	short amount
+	int trap (0x87654321)
+}
+
+CL_BANK_CLOSE(212) {
+}
+
+CL_COMBAT_STYLE(29) {
+	byte style
+}
+
+CL_DUEL_ITEM_UPDATE(33) {
+	byte count
+	list to count {
+		short item
+		int itemCount
+	}
+}
+
+CL_DUEL_SETTINGS(8) {
+	byte allowRetreat
+	byte allowMagic
+	byte allowPrayer
+	byte allowWeapons
+}
+
+CL_DUEL_ACCEPT(176) {
+}
+
+CL_DUEL_DECLINE(197) {
+}
+
+CL_DUEL_CONFIRM_DECLINE(230) {
+}
+
+CL_DUEL_CONFIRM_ACCEPT(77) {
+}
+
+CL_DUEL_CONFIRM_CLOSE(197) {
+}
+
+CL_REPORT_ABUSE(206) {
+	long usernameHash
+	byte offence
+	byte mute
+}
+
+CL_SHOP_BUY(236) {
+	short item
+	int amount
+}
+
+CL_SHOP_SELL(221) {
+	short item
+	int amount
+}
+
+CL_SHOP_CLOSE(166) {
+}
+
+CL_TRADE_ITEM_UPDATE(46) {
+	byte count
+	list to count {
+		short item
+		int itemCount
+	}
+}
+
+CL_TRADE_ACCEPT(55) {
+}
+
+CL_TRADE_DECLINE(230) {
+}
+
+CL_TRADE_CONFIRM_DECLINE(230) {
+}
+
+CL_TRADE_CONFIRM_ACCEPT(104) {
+}
+
+CL_CHOOSE_OPTION(116) {
+	byte option
+}
+
+CL_PRAYER_OFF(254) {
+	byte prayer
+}
+
+CL_PRAYER_ON(60) {
+	byte prayer
+}
+
+CL_GAME_SETTINGS(111) {
+	byte setting
+	byte enabled
+}
+
+CL_APPEARANCE(235) {
+	byte headGender
+	byte headType
+	byte bodyGender
+	byte 2colour
+	byte hairColour
+	byte topColour
+	byte bottomColour
+	byte skinColour
+}
+
+CL_SLEEP_WORD(45) {
+	string word
+	if not sleepWordDelay
+		byte (0)
+}
+
+CL_KNOWN_PLAYERS(163) {
+	short count
+	list to count {
+		short serverIndex
+		short serverId
+	}
+}
+
+CL_PACKET_EXCEPTION(3) {
+	// each string is sent separately in their own packet
+	string exception
+	string packetInfo
+	string environmentInfo
+	string packetData
+}
+
+CL_LOGOUT(102) {
+}
+
+CL_WALK(187) {
+	short targetX
+	short targetY
+	list to steps {
+		byte stepX
+		byte stepY
+	}
+}
+
+CL_WALK_ACTION(16) {
+	short targetX
+	short targetY
+	list to steps {
+		byte stepX
+		byte stepY
+	}
+}
+
+CL_GROUND_ITEM_SPELL(249) {
+	short x
+	short y
+	short item
+	short spell
+}
+
+CL_GROUND_ITEM_USE_ON(53) {
+	short x
+	short y
+	short item
+	short slot
+}
+
+CL_GROUND_ITEM_TAKE(247) {
+	short x
+	short y
+	short item
+	short null (-1)
+}
+
+CL_WALL_OBJECT_SPELL(180) {
+	short x
+	short y
+	byte wallObject [direction?]
+	short spell
+}
+
+CL_WALL_OBJECT_USE_ON(161) {
+	short x
+	short y
+	byte wallObject [direction?]
+	short slot
+}
+
+CL_WALL_OBJECT_COMMAND1(14) {
+	short x
+	short y
+	byte wallObject [direction?]
+}
+
+CL_WALL_OBJECT_COMMAND2(127) {
+	short x
+	short y
+	byte wallObject [direction?]
+}
+
+CL_OBJECT_SPELL(99) {
+	short x
+	short y
+	
+}

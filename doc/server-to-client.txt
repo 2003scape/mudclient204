@@ -1,0 +1,411 @@
+SV_LOGIN {
+	byte response
+}
+
+SV_MESSAGE(131) {
+	string message
+}
+
+SV_CLOSE_CONNECTION(4) {
+}
+
+SV_CANT_LOGOUT(183) {
+}
+
+SV_FRIEND_LIST(71) {
+	byte count
+	list to count {
+		long usernameHash
+		byte online
+	}
+}
+
+SV_FRIEND_STATUS_CHANGE(149) {
+	long usernameHash
+}
+
+SV_IGNORE_LIST(109) {
+	byte count
+	list to count {
+		long usernameHash
+	}
+}
+
+SV_PRIVACY_SETTINGS(51) {
+	byte blockChat
+	byte blockPM
+	byte blockTrade
+	byte blockDuel
+}
+
+SV_FRIEND_MESSAGE(120) {
+	long usernameHash
+	int unknown
+	string message
+}
+
+SV_REGION_PLAYERS(191) {
+	bitmask[11] regionX
+	bitmask[13] regionY
+	bitmask[4] animation
+	bitmask[8] knownPlayerCount
+	list to knownPlayerCount {
+		bitmask[1] reqUpdate
+		if reqUpdate is not 0 {
+			bitmask[1] updateType
+			if updateType is 0 {
+				bitmask[3] nextAnimation
+			}
+			if updateType is not 0 {
+				bitmask[4] unknown
+				if unknown & 12 is not 12 {
+					bitmask[4] nextAnimation
+				}
+			}
+		}
+	}
+	list to newPlayerCount {
+		bitmask[11] serverIndex
+		bitmask[5] areaX
+		bitmask[5] areaY
+		bitmask[4] animation
+		bitmask[1] unknown
+	}
+}
+
+SV_REGION_GROUND_ITEMS(99) {
+	TODO
+}
+
+SV_REGION_OBJECTS(48) {
+	TODO
+}
+
+SV_INVENTORY_ITEMS(53) {
+	byte count
+	list to count {
+		short data
+		if item is stackable {
+			int itemCount
+		}
+	}
+}
+
+SV_REGION_PLAYER_UPDATE(234) {
+	short updateSize
+	list to updateSize {
+		short playerIndex
+		byte updateType
+		if updateType is 0 {
+			// action bubble
+			short item
+		}
+		if updateType is 1 {
+			// chat
+			byte messageLength
+			byte[] message
+		}
+		if updateType is 2 {
+			// player is hit
+			byte damageTaken
+			byte healthCurrent
+			byte healthMax
+		}
+		if updateType is 3 {
+			// projectile from npc
+			short projectileSprite
+			short npcServerIndex
+		}
+		if updateType is 4 {
+			// projectile from player
+			short projectileSprite
+			short playerServerIndex
+		}
+		if updateType is 5 {
+			// player appearance
+			short serverId
+			long usernameHash
+			byte equippedItemsCount
+			list to equippedItemsCount {
+				byte equippedItem
+			}
+			byte colourHair
+			byte colourTop
+			byte colourBottom
+			byte colourSKin
+			byte level
+			byte actionBubbleTimeout
+		}
+		if updateType is 6 {
+			// npc chat
+			byte messageLength
+			byte[] message
+		}
+	}
+}
+
+SV_REGION_WALL_OBJECTS(91) {
+	TODO
+}
+
+SV_REGION_NPCS(79) {
+	TODO
+}
+
+SV_REGION_NPC_UPDATE(104) {
+	short updateSize
+	list to updateSize {
+		short npcServerIndex
+		byte updateType
+		if updateType is 1 {
+			// npc chat
+			short targetPlayerServerIndex
+			byte messageLength
+			byte[] message
+		}
+		if updateType is 2 {
+			// npc is hit
+			byte damageTaken
+			byte healthCurrent
+			byte healthMax
+		}
+	}
+}
+
+SV_OPTION_LIST(245) {
+	byte count
+	list to count {
+		int optionLength
+		string option
+	}
+}
+
+SV_OPTION_LIST_CLOSE(252) {
+}
+
+SV_WORLD_INFO(25) {
+	short localPlayerServerIndex
+	short planeWidth
+	short planeHeight
+	short planeIndex
+	short planeMultiplier
+}
+
+SV_PLAYER_STAT_LIST(156) {
+	list to 18 {
+		byte statCurrent
+	}
+	list to 18 {
+		byte statMax
+	}
+	list to 18 {
+		int statExperience
+	}
+	byte questPoints
+}
+
+SV_PLAYER_STAT_EQUIPMENT_BONUS(153) {
+	list to 5 {
+		byte equipmentBonus
+	}
+}
+
+SV_PLAYER_DIED(83) {
+}
+
+SV_REGION_ENTITY_UPDATE(211) {
+	TODO
+}
+
+SV_DIALOG_APPEARANCE_OPEN(59) {
+}
+
+SV_DIALOG_TRADE_OPEN(92) {
+	short recipientServerIndex
+}
+
+SV_DIALOG_TRADE_CLOSE(128) {
+}
+
+SV_DIALOG_TRADE_ITEMS(97) {
+	byte recipientItemsCount
+	list to recipientItemsCount {
+		short recipientItem
+		short recipientItemCount
+	}
+}
+
+SV_DIALOG_TRADE_RECIPIENT_STATUS(162) {
+	byte recipientHasAccepted
+}
+
+SV_DIALOG_SHOP_OPEN(101) {
+	byte itemsCount
+	byte shopType
+	byte shopSellPriceModifier
+	byte shopBuyPriceModifier
+	list to itemsCount {
+		short item
+		short itemCount
+	}
+}
+
+SV_DIALOG_SHOP_CLOSE(137) {
+}
+
+SV_DIALOG_TRADE_STATUS(15) {
+	byte playerHasAccepted
+}
+
+SV_GAME_SETTINGS(240) {
+	byte cameraAuto
+	byte oneMouseButton
+	byte soundDisabled
+}
+
+SV_PRAYER_STATUS(206) {
+	TODO
+}
+
+SV_PLAYER_QUEST_LIST(5) {
+	list to 50 {
+		byte completed
+	}
+}
+
+SV_DIALOG_BANK_OPEN(42) {
+	byte itemsCount
+	byte itemsMax
+	list to itemsCount {
+		short item
+		int itemCount
+	}
+}
+
+SV_DIALOG_BANK_CLOSE(203) {
+}
+
+SV_PLAYER_STAT_EXPERIENCE_UPDATE(33) {
+	byte stat
+	int experience
+}
+
+SV_DIALOG_DUEL_OPEN(176) {
+	short opponentServerIndex
+}
+
+SV_DIALOG_DUEL_CLOSE(225) {
+}
+
+SV_DIALOG_TRADE_CONFIRM_OPEN(20) {
+	long recipientUsernameHash
+	byte recipientItemsCount
+	list to recipientItemsCount {
+		short recipientItem
+		int recipientItemCount
+	}
+	byte itemsCount
+	list to itemsCount {
+		short item
+		short itemCount
+	}
+}
+
+SV_DIALOG_DUEL_UPDATE(6) {
+	byte itemsCount
+	list to itemsCount {
+		short item
+		int itemCount
+	}
+}
+
+SV_DIALOG_DUEL_SETTINGS(30) {
+	byte enableRetreat
+	byte enableMagic
+	byte enablePrayer
+	byte enableWeapons
+}
+
+SV_DIALOG_BANK_UPDATE(249) {
+	byte itemsCountOld
+	short item
+	short itemCount
+}
+
+SV_INVENTORY_ITEM_UPDATE(90) {
+	byte slot
+	short data
+	if data & 32767 is stackable {
+		int itemCount
+	}
+}
+
+SV_INVENTORY_ITEM_REMOVE(123) {
+	byte itemsCountNew
+}
+
+SV_PLAYER_STAT_UPDATE(159) {
+	byte stat
+	byte current
+	byte base
+	int experience
+}
+
+SV_DIALOG_DUEL_OPPONENT_ACCEPTED(253) {
+	byte opponentAccepted
+}
+
+SV_DIALOG_DUEL_ACCEPTED(210) {
+	byte accepted
+}
+
+SV_DIALOG_DUEL_(172) {
+	TODO
+}
+
+SV_SOUND(204) {
+	string soundFile
+}
+
+SV_TELEPORT_BUBBLE(36) {
+	byte bubbleType
+	byte areaX
+	byte areaY
+}
+
+SV_DIALOG_WELCOME_OPEN(182) {
+	int lastIP
+	short lastPlayedInDays
+	byte recoverySetDays
+	short unreadMessagesCount
+}
+
+SV_DIALOG_SERVER_MESSAGE(89) {
+	string message
+}
+
+SV_DIALOG_SERVER_MESSAGE_ONTOP(222) {
+	string message
+}
+
+SV_PLAYER_STAT_FATIGUE(114) {
+	short fatigue
+}
+
+SV_DIALOG_SLEEP_OPEN(117) {
+	byte[] sleepWordSprite
+}
+
+SV_PLAYER_STAT_FATIGUE_ASLEEP(244) {
+	short fatigueAsleep
+}
+
+SV_DIALOG_SLEEP_CLOSE(84) {
+}
+
+SV_DIALOG_SLEEP_INCORRECT(194) {
+}
+
+SV_SYSTEM_UPDATE(52) {
+	short time
+}
