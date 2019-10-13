@@ -471,6 +471,18 @@ public class Panel {
         }
 
     }
+ 
+    public int addString(int x, int y, String text, int size, boolean flag) {
+        controlType[controlCount] = 0;
+        controlShown[controlCount] = true;
+        controlClicked[controlCount] = false;
+        controlTextSize[controlCount] = size;
+        controlUseAlternativeColour[controlCount] = flag;
+        controlX[controlCount] = x;
+        controlY[controlCount] = y;
+        controlText[controlCount] = text;
+        return controlCount++;
+    }
 
     public int addText(int x, int y, String text, int size, boolean flag) {
         controlType[controlCount] = 1;
@@ -647,6 +659,14 @@ public class Panel {
         controlHeight[controlCount] = height;
         controlListEntryMouseButtonDown[controlCount] = 0;
         return controlCount++;
+    }
+
+    public void toggleCheckbox(int control, boolean activated) {
+        controlListEntryMouseButtonDown[control] = (activated ? 1 : 0);
+    }
+
+    public boolean isActivated(int control) {
+        return controlListEntryMouseButtonDown[control] != 0;
     }
 
     public void clearList(int control) {

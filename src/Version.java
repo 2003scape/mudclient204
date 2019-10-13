@@ -1,7 +1,7 @@
 public class Version {
 
     //public static int unused = 203;
-    public static int CLIENT = 203;
+    public static int CLIENT = 204;
     public static int CONFIG = 85;
     public static int MAPS = 63;
     public static int MEDIA = 58;

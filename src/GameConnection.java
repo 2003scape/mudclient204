@@ -48,6 +48,92 @@ public class GameConnection extends GameShell {
         anIntArray629 = new int[maxSocialListSize];
     }
 
+    protected void registerAccount(String user, String pass) {
+        if (worldFullTimeout > 0) {
+            showLoginScreenStatus("Please wait...", "Connecting to server");
+            try {
+                Thread.sleep(2000L);
+            } catch (Exception Ex) {
+            }
+            showLoginScreenStatus("Sorry! The server is currently full.", "Please try again later");
+            return;
+        }
+        try {
+            this.username = user;
+            user = Utility.formatAuthString(user, 20);
+            this.password = pass;
+            pass = Utility.formatAuthString(pass, 20);
+
+            showLoginScreenStatus("Please wait...", "Connecting to server");
+            clientStream = new ClientStream(createSocket(server, port), this);
+            clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_SESSION));
+            clientStream.putByte((int) (Utility.username2hash(user) >> 16 & 31L));
+            clientStream.flushPacket();
+            long sessid = clientStream.getLong();
+            sessionID = sessid;
+            if (sessid == 0L) {
+                showLoginScreenStatus("Login server offline.", "Please try again in a few mins");
+                return;
+            }
+            System.out.println("Verb: Session id: " + sessid);
+
+            clientStream.newPacket(2);
+            clientStream.putShort(clientVersion);
+            clientStream.putString(user);
+            clientStream.putString(pass);
+            clientStream.flushPacket();
+
+            int response = clientStream.readStream();
+            clientStream.closeStream();
+            System.out.println("Newplayer response: " + response);
+
+            switch(response) {
+            case 2: // Success
+                resetLoginVars();
+                return;
+            case 13: // Username taken
+            case 3:
+                showLoginScreenStatus("Username already taken.", "Please choose another username");
+                return;
+            case 4: // Username in use.  Distinction??
+                showLoginScreenStatus("That username is already in use.", "Wait 60 seconds then retry");
+                return;
+            case 5: // Client has been updated
+                showLoginScreenStatus("The client has been updated.", "Please reload this page");
+                return;
+            case 6: // IP address in use
+                showLoginScreenStatus("You may only use 1 character at once.", "Your ip-address is already in use");
+                return;
+            case 7: // Spam throttle was hit
+                showLoginScreenStatus("Login attempts exceeded!", "Please try again in 5 minutes");
+                return;
+            case 11: // Temporary ban
+                showLoginScreenStatus("Account has been temporarily disabled", "for cheating or abuse");
+                return;
+            case 12: // Permanent ban
+                showLoginScreenStatus("Account has been permanently disabled", "for cheating or abuse");
+                return;
+            case 14: // server full
+                showLoginScreenStatus("Sorry! The server is currently full.", "Please try again later");
+                worldFullTimeout = 1500;
+                return;
+            case 15: // Members account needed
+                showLoginScreenStatus("You need a members account", "to login to this server");
+                return;
+            case 16: // Switch to members server
+                showLoginScreenStatus("Please login to a members server", "to access member-only features");
+                return;
+            default:
+                showLoginScreenStatus("Error unable to create user.", "Unrecognised response code");
+                return;
+            }
+        } catch(Exception e) {
+            // This should catch any I/O issues
+            e.printStackTrace();
+            showLoginScreenStatus("Error unable to create user.", "Unrecognised response code");
+        }
+    }
+
     protected void login(String u, String p, boolean reconnecting) {
         if (worldFullTimeout > 0) {
             showLoginScreenStatus("Please wait...", "Connecting to server");
@@ -134,7 +220,7 @@ public class GameConnection extends GameShell {
             //clientStream.putBytes(buffer.buffer, 0, buffer.offset);
 
             clientStream.flushPacket();
-            clientStream.seedIsaac(ai);
+            //clientStream.seedIsaac(ai);
             int resp = clientStream.readStream();
             System.out.println("login response:" + resp);
             if (resp == 25) {

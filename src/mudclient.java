@@ -236,6 +236,8 @@ public class mudclient extends GameConnection {
     private int appearanceHeadGender;
     private String loginUser;
     private String loginPass;
+    private String registerUser;
+    private String registerPassword;
     private int showDialogSocialInput;
     private int cameraAngle;
     private int anInt707;
@@ -389,8 +391,13 @@ public class mudclient extends GameConnection {
             0, 1, 2, 1
     };
     private int referid;
-    private int anInt827;
-    private int controlLoginNewOk;
+    private int controlRegisterUser;
+    private int controlRegisterPassword;
+    private int controlRegisterConfirmPassword;
+    private int controlRegisterSubmit;
+    private int controlRegisterCancel;
+    private int controlRegisterCheckbox;
+    private int controlRegisterStatus;
     private int teleportBubbleType[];
     private Panel panelLoginWelcome;
     private int combatTimeout;
@@ -2419,24 +2426,32 @@ public class mudclient extends GameConnection {
             controlWelcomeExistinguser = panelLoginWelcome.addButton(x, 250 + y, 200, 35);
         }
         panelLoginNewuser = new Panel(surface, 50);
-        y = 230;
-        if (referid == 0) {
-            panelLoginNewuser.addText(x, y + 8, "To create an account please go back to the", 4, true);
-            y += 20;
-            panelLoginNewuser.addText(x, y + 8, "www.runescape.com front page, and choose 'create account'", 4, true);
-        } else if (referid == 1) {
-            panelLoginNewuser.addText(x, y + 8, "To create an account please click on the", 4, true);
-            y += 20;
-            panelLoginNewuser.addText(x, y + 8, "'create account' link below the game window", 4, true);
-        } else {
-            panelLoginNewuser.addText(x, y + 8, "To create an account please go back to the", 4, true);
-            y += 20;
-            panelLoginNewuser.addText(x, y + 8, "runescape front webpage and choose 'create account'", 4, true);
-        }
-        y += 30;
-        panelLoginNewuser.addButtonBackground(x, y + 17, 150, 34);
-        panelLoginNewuser.addText(x, y + 17, "Ok", 5, false);
-        controlLoginNewOk = panelLoginNewuser.addButton(x, y + 17, 150, 34);
+        y = 70;
+        controlRegisterStatus = panelLoginNewuser.addText(x, y + 8, "To create an account please enter all the requested details", 4, true);
+        int relY = y + 25;
+        panelLoginNewuser.addButtonBackground(x, relY + 17, 250, 34);
+        panelLoginNewuser.addText(x, relY + 8, "Choose a Username", 4, false);
+        controlRegisterUser = panelLoginNewuser.addTextInput(x, relY + 25, 200, 40, 4, 12, false, false);
+        panelLoginNewuser.setFocus(controlRegisterUser);
+        relY += 40;
+        panelLoginNewuser.addButtonBackground(x - 115, relY + 17, 220, 34);
+        panelLoginNewuser.addText(x - 115, relY + 8, "Choose a Password", 4, false);
+        controlRegisterPassword = panelLoginNewuser.addTextInput(x - 115, relY + 25, 220, 40, 4, 20, true, false);
+        panelLoginNewuser.addButtonBackground(x + 115, relY + 17, 220, 34);
+        panelLoginNewuser.addText(x + 115, relY + 8, "Confirm Password", 4, false);
+        controlRegisterConfirmPassword = panelLoginNewuser.addTextInput(x + 115, relY + 25, 220, 40, 4, 20, true, false);
+        relY += 60;
+        controlRegisterCheckbox = panelLoginNewuser.addCheckbox(x - 196 - 7, relY - 7, 14, 14);
+        panelLoginNewuser.addString(x - 181, relY, "I have read and agree to the terms and conditions", 4, true);
+        relY += 15;
+        panelLoginNewuser.addText(x, relY, "(to view these click the relevant link below this game window)", 4, true);
+        relY += 20;
+        panelLoginNewuser.addButtonBackground(x - 100, relY + 17, 150, 34);
+        panelLoginNewuser.addText(x - 100, relY + 17, "Submit", 5, false);
+        controlRegisterSubmit = panelLoginNewuser.addButton(x - 100, relY + 17, 150, 34);
+        panelLoginNewuser.addButtonBackground(x + 100, relY + 17, 150, 34);
+        panelLoginNewuser.addText(x + 100, relY + 17, "Cancel", 5, false);
+        controlRegisterCancel = panelLoginNewuser.addButton(x + 100, relY + 17, 150, 34);
         panelLoginExistinguser = new Panel(surface, 50);
         y = 230;
         controlLoginStatus = panelLoginExistinguser.addText(x, y - 10, "Please enter your username and password", 4, true);
@@ -5062,7 +5077,7 @@ public class mudclient extends GameConnection {
         welcomScreenAlreadyShown = false;
         surface.interlace = false;
         surface.blackScreen();
-        if (loginScreen == 0 || loginScreen == 1 || loginScreen == 2 || loginScreen == 3) {
+        if (loginScreen == 0 || loginScreen == 2) {
             int i = (loginTimer * 2) % 3072;
             if (i < 1024) {
                 surface.drawSprite(0, 10, spriteLogo);
@@ -5730,7 +5745,7 @@ public class mudclient extends GameConnection {
 
     protected void showLoginScreenStatus(String s, String s1) {
         if (loginScreen == 1)
-            panelLoginNewuser.updateText(anInt827, s + " " + s1);
+            panelLoginNewuser.updateText(controlRegisterStatus, s + " " + s1);
         if (loginScreen == 2)
             panelLoginExistinguser.updateText(controlLoginStatus, s + " " + s1);
         loginUserDisp = s1;
@@ -7438,8 +7453,15 @@ public class mudclient extends GameConnection {
             super.worldFullTimeout--;
         if (loginScreen == 0) {
             panelLoginWelcome.handleMouse(super.mouseX, super.mouseY, super.lastMouseButtonDown, super.mouseButtonDown);
-            if (panelLoginWelcome.isClicked(controlWelcomeNewuser))
+            if (panelLoginWelcome.isClicked(controlWelcomeNewuser)) {
                 loginScreen = 1;
+                panelLoginNewuser.updateText(controlRegisterUser, "");
+                panelLoginNewuser.updateText(controlRegisterPassword, "");
+                panelLoginNewuser.updateText(controlRegisterConfirmPassword, "");
+                panelLoginNewuser.setFocus(controlRegisterUser);
+                panelLoginNewuser.toggleCheckbox(controlRegisterCheckbox, false);
+                panelLoginNewuser.updateText(controlRegisterStatus, "To create an account please enter all the requested details");
+            }
             if (panelLoginWelcome.isClicked(controlWelcomeExistinguser)) {
                 loginScreen = 2;
                 panelLoginExistinguser.updateText(controlLoginStatus, "Please enter your username and password");
@@ -7450,8 +7472,41 @@ public class mudclient extends GameConnection {
             }
         } else if (loginScreen == 1) {
             panelLoginNewuser.handleMouse(super.mouseX, super.mouseY, super.lastMouseButtonDown, super.mouseButtonDown);
-            if (panelLoginNewuser.isClicked(controlLoginNewOk)) {
+            if (panelLoginNewuser.isClicked(controlRegisterCancel)) {
                 loginScreen = 0;
+                return;
+            }
+            if(panelLoginNewuser.isClicked(controlRegisterUser)) {
+                panelLoginNewuser.setFocus(controlRegisterPassword);
+            }
+            if(panelLoginNewuser.isClicked(controlRegisterPassword)) {
+                panelLoginNewuser.setFocus(controlRegisterConfirmPassword);
+            }
+            if(panelLoginNewuser.isClicked(controlRegisterConfirmPassword) || panelLoginNewuser.isClicked(controlRegisterSubmit)) {
+                String username = panelLoginNewuser.getText(controlRegisterUser);
+                String pass = panelLoginNewuser.getText(controlRegisterPassword);
+                String confPass = panelLoginNewuser.getText(controlRegisterConfirmPassword);
+                if(username == null || username.length() <= 0 || pass == null || pass.length() <= 0 || confPass == null || confPass.length() <= 0) {
+                    return;
+                }
+                if(!pass.equals(confPass)) {
+                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@The two passwords entered are not the same as each other!");
+                    return;
+                }
+                if(pass.length() < 5 || pass.length() > 20) {
+                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@Your password must be between 5 and 20 characters long.");
+                    return;
+                }
+                if(!panelLoginNewuser.isActivated(controlRegisterCheckbox)) {
+                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@You must agree to the terms+conditions to continue");
+                    return;
+                }
+                panelLoginNewuser.updateText(controlRegisterStatus, "Please wait... Creating new account");
+                drawLoginScreens();
+                resetTimings();
+                registerUser = panelLoginNewuser.getText(controlRegisterUser);
+                registerPassword = panelLoginNewuser.getText(controlRegisterPassword);
+                registerAccount(registerUser, registerPassword);
                 return;
             }
         } else if (loginScreen == 2) {
