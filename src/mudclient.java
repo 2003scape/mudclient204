@@ -2335,7 +2335,7 @@ public class mudclient extends GameConnection {
 
         surface.drawBox(0, 194, 512, 20, 0);
         for (int k = 6; k >= 1; k--)
-            surface.drawLineAlpha(0, k, 0, 194 - k, gameWidth, 8); 
+            surface.drawLineAlpha(0, k, 0, 194 - k, gameWidth, 8);
 
         surface.drawSprite(gameWidth / 2 - surface.spriteWidth[spriteMedia + 10] / 2, 15, spriteMedia + 10); // runescape logo
         surface.drawSprite(spriteLogo, 0, 0, gameWidth, 200);
@@ -2392,7 +2392,7 @@ public class mudclient extends GameConnection {
 
         surface.drawBox(0, 194, gameWidth, 20, 0);
         for (int l1 = 6; l1 >= 1; l1--)
-            surface.drawLineAlpha(0, l1, 0, 194, gameWidth, 8); 
+            surface.drawLineAlpha(0, l1, 0, 194, gameWidth, 8);
 
         surface.drawSprite(gameWidth / 2 - surface.spriteWidth[spriteMedia + 10] / 2, 15, spriteMedia + 10);
         surface.drawSprite(spriteMedia + 10, 0, 0, gameWidth, 200);

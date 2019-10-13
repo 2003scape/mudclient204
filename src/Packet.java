@@ -141,7 +141,7 @@ public class Packet {
             packetEnd--;
             packetData[packetStart + 1] = packetData[packetEnd];
         }
-        if (packetMaxLength <= 10000) // this seems largely useless and doesn't appear to do anything
+        if (packetMaxLength <= 10000) // this keeps count of how many times we send each opcode, and how much bandwidth each opcode uses per session
         {
             int k = packetData[packetStart + 2] & 0xff;
             anIntArray537[k]++;
