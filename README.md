@@ -1,5 +1,10 @@
 # mudclient204
 
+*note:* this branch contains account management features ported from earlier 
+revisions (approx mudclient175).
+
+![](./doc/register.png?raw=true)
+
 a mostly-refactored 204 revision of jagex's
 [abandonware](https://web.archive.org/web/20190722084731/https://oldschool.runescape.wiki/w/Update:RuneScape_Classic:_Farewell)
 runescape classic client. credits go to Isaac Exemplar.
