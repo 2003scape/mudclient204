@@ -59,9 +59,9 @@ public class GameConnection extends GameShell {
             return;
         }
         try {
-            this.username = user;
+            //this.username = user; 
             user = Utility.formatAuthString(user, 20);
-            this.password = pass;
+            //this.password = pass;
             pass = Utility.formatAuthString(pass, 20);
 
             showLoginScreenStatus("Please wait...", "Connecting to server");
@@ -130,7 +130,7 @@ public class GameConnection extends GameShell {
         } catch(Exception e) {
             // This should catch any I/O issues
             e.printStackTrace();
-            showLoginScreenStatus("Error unable to create user.", "Unrecognised response code");
+            showLoginScreenStatus("Sorry! Unable to connect.", "Check internet settings or try another world");
         }
     }
 
@@ -328,21 +328,23 @@ public class GameConnection extends GameShell {
             }
         } catch (Exception exception) {
             System.out.println(String.valueOf(exception));
-        }
-        if (autoLoginTimeout > 0) {
-            try {
-                Thread.sleep(5000L);
-            } catch (Exception Ex) {
+
+            if (autoLoginTimeout > 0) {
+                try {
+                    Thread.sleep(5000L);
+                } catch (Exception Ex) {
+                }
+                autoLoginTimeout--;
+                login(username, password, reconnecting);
             }
-            autoLoginTimeout--;
-            login(username, password, reconnecting);
-        }
-        if (reconnecting) {
-            username = "";
-            password = "";
-            resetLoginVars();
-        } else {
-            showLoginScreenStatus("Sorry! Unable to connect.", "Check internet settings or try another world");
+
+            if (reconnecting) {
+                username = "";
+                password = "";
+                resetLoginVars();
+            } else {
+                showLoginScreenStatus("Sorry! Unable to connect.", "Check internet settings or try another world");
+            }
         }
     }
 

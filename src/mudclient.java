@@ -307,6 +307,7 @@ public class mudclient extends GameConnection {
     private int controlLoginPass;
     private int controlLoginOk;
     private int controlLoginCancel;
+    private int controlLoginRecover;
     private boolean tradeRecipientAccepted;
     private boolean tradeAccepted;
     private int teleportBubbleCount;
@@ -566,6 +567,31 @@ public class mudclient extends GameConnection {
     private World world;
     private GameModel objectModel[];
 
+    private String recoveryQuestions[] = {
+            "Where were you born?", "What was your first teachers name?", "What is your fathers middle name?", "Who was your first best friend?", "What is your favourite vacation spot?", "What is your mothers middle name?", "What was your first pets name?", "What was the name of your first school?", "What is your mothers maiden name?", "Who was your first boyfriend/girlfriend?",
+            "What was the first computer game you purchased?", "Who is your favourite actor/actress?", "Who is your favourite author?", "Who is your favourite musician?", "Who is your favourite cartoon character?", "What is your favourite book?", "What is your favourite food?", "What is your favourite movie?"
+    };
+    private boolean recentRecoveryFail;
+    private Panel panelRecoverUser;
+    private int controlRecoverQuestions[] = new int[5];
+    private int controlRecoverInfo1;
+    private int controlRecoverInfo2;
+    private int controlRecoverAnswers[] = new int[5];
+    private int controlRecoverOldPassword;
+    private int controlRecoverNewPassword;
+    private int controlRecoverConfirmPassword;
+    private int controlRecoverSubmit;
+    private int controlRecoverCancel;
+    private Panel panelRecoverCreate;
+    private int controlRecoverCreateInfo;
+    private int selectedRecoveryIds[] = new int[]{0, 1, 2, 3, 4};
+    private String selectedRecoveryQuestions[] = new String[5];
+    private int controlRecoverNewQuestions[] = new int[5];
+    private int controlRecoverNewAnswers[] = new int[5];
+    private int controlRecoverNewQuestionButtons[] = new int[5];
+    private int controlRecoverCustomQuestionButtons[] = new int[5];
+    private int controlRecoverCreateButton;
+
     public mudclient() {
         menuIndices = new int[menuMaxSize];
         cameraAutoAngleDebug = false;
@@ -771,6 +797,46 @@ public class mudclient extends GameConnection {
         if (!optionSoundDisabled)
             // TODO dump this to test our PCM player too
             audioPlayer.writeStream(soundData, Utility.getDataFileOffset(s + ".pcm", soundData), Utility.getDataFileLength(s + ".pcm", soundData));
+    }
+
+    private void createRecoverCreatePanel() {
+        panelRecoverCreate = new Panel(surface, 100);
+        byte initY = 8;
+        controlRecoverCreateInfo = panelRecoverCreate.addText(256, initY, "@yel@Please provide 5 security questions in case you lose your password", 1, true);
+        int y = initY + 22;
+        panelRecoverCreate.addText(256, y, "If you ever lose your password, you will need these to prove you own your account.", 1, true);
+        y += 13;
+        panelRecoverCreate.addText(256, y, "Your answers are encrypted and are ONLY used for password recovery purposes.",
+        1, true);
+        y += 22;
+        panelRecoverCreate.addText(256, y, "@ora@IMPORTANT:@whi@ To recover your password you must give the EXACT same answers you", 1, true);
+        y += 13;
+        panelRecoverCreate.addText(256, y, "give here. If you think you might forget an answer, or someone else could guess the", 1, true);
+        y += 13;
+        panelRecoverCreate.addText(256, y, "answer, then press the 'different question' button to get a better question.", 1, true);
+        y += 35;
+
+        for (int i = 0; i < 5; i++) {
+            panelRecoverCreate.addButtonBackground(170, y, 310, 30);
+            selectedRecoveryQuestions[i] = recoveryQuestions[selectedRecoveryIds[i]];
+            controlRecoverNewQuestions[i] = panelRecoverCreate.addText(170, y - 7, i + 1 + ": " + recoveryQuestions[selectedRecoveryIds[i]], 1, true);
+            controlRecoverNewAnswers[i] = panelRecoverCreate.addTextInput(170, y + 7, 310, 30, 1, 80, false, true);
+            panelRecoverCreate.addButtonBackground(370, y, 80, 30);
+            panelRecoverCreate.addText(370, y - 7, "Different", 1, true);
+            panelRecoverCreate.addText(370, y + 7, "Question", 1, true);
+            controlRecoverNewQuestionButtons[i] = panelRecoverCreate.addButton(370, y, 80, 30);
+            panelRecoverCreate.addButtonBackground(455, y, 80, 30);
+            panelRecoverCreate.addText(455, y - 7, "Enter own", 1, true);
+            panelRecoverCreate.addText(455, y + 7, "Question", 1, true);
+            controlRecoverCustomQuestionButtons[i] = panelRecoverCreate.addButton(455, y, 80, 30);
+            y += 35;
+        }
+
+        panelRecoverCreate.setFocus(controlRecoverNewAnswers[0]);
+        y += 10;
+        panelRecoverCreate.addButtonBackground(256, y, 250, 30);
+        panelRecoverCreate.addText(256, y, "Click here when finished", 4, true);
+        controlRecoverCreateButton = panelRecoverCreate.addButton(256, y, 250, 30);
     }
 
     private void drawDialogReportAbuse() {
@@ -1717,6 +1783,41 @@ public class mudclient extends GameConnection {
         surface.drawStringCenter("Cancel", 256, 208, 1, j);
     }
 
+    private void createRecoverUserPanel() {
+        panelRecoverUser = new Panel(surface, 100);
+        byte initY = 10;
+        controlRecoverInfo1 = panelRecoverUser.addText(256, initY, "@yel@To prove this is your account please provide the answers to", 1, true);
+        int y = initY + 15;
+        controlRecoverInfo2 = panelRecoverUser.addText(256, y, "@yel@your security questions. You will then be able to reset your password", 1, true);
+        y += 35;
+
+        for (int i = 0; i < 5; ++i) {
+            panelRecoverUser.addButtonBackground(256, y, 410, 30);
+            controlRecoverQuestions[i] = panelRecoverUser.addText(256, y - 7, (i + 1) + ": question?", 1, true);
+            controlRecoverAnswers[i] = panelRecoverUser.addTextInput(256, y + 7, 310, 30, 1, 80, true, true);
+            y += 35;
+        }
+
+        panelRecoverUser.setFocus(controlRecoverAnswers[0]);
+        panelRecoverUser.addButtonBackground(256, y, 410, 30);
+        panelRecoverUser.addText(256, y - 7, "If you know it, enter a previous password used on this account", 1, true);
+        controlRecoverOldPassword = panelRecoverUser.addTextInput(256, y + 7, 310, 30, 1, 80, true, true);
+        y += 35;
+        panelRecoverUser.addButtonBackground(151, y, 200, 30);
+        panelRecoverUser.addText(151, y - 7, "Choose a NEW password", 1, true);
+        controlRecoverNewPassword = panelRecoverUser.addTextInput(146, y + 7, 200, 30, 1, 80, true, true);
+        panelRecoverUser.addButtonBackground(361, y, 200, 30);
+        panelRecoverUser.addText(361, y - 7, "Confirm new password", 1, true);
+        controlRecoverConfirmPassword = panelRecoverUser.addTextInput(366, y + 7, 200, 30, 1, 80, true, true);
+        y += 35;
+        panelRecoverUser.addButtonBackground(201, y, 100, 30);
+        panelRecoverUser.addText(201, y, "Submit", 4, true);
+        controlRecoverSubmit = panelRecoverUser.addButton(201, y, 100, 30);
+        panelRecoverUser.addButtonBackground(311, y, 100, 30);
+        panelRecoverUser.addText(311, y, "Cancel", 4, true);
+        controlRecoverCancel = panelRecoverUser.addButton(311, y, 100, 30);
+    }
+
     private void createAppearancePanel() {
         panelAppearance = new Panel(surface, 100);
         panelAppearance.addText(256, 10, "Please design Your Character", 4, true);
@@ -2455,23 +2556,26 @@ public class mudclient extends GameConnection {
         panelLoginExistinguser = new Panel(surface, 50);
         y = 230;
         controlLoginStatus = panelLoginExistinguser.addText(x, y - 10, "Please enter your username and password", 4, true);
-        y += 28;
-        panelLoginExistinguser.addButtonBackground(x - 116, y, 200, 40);
-        panelLoginExistinguser.addText(x - 116, y - 10, "Username:", 4, false);
-        controlLoginUser = panelLoginExistinguser.addTextInput(x - 116, y + 10, 200, 40, 4, 12, false, false);
-        y += 47;
-        panelLoginExistinguser.addButtonBackground(x - 66, y, 200, 40);
-        panelLoginExistinguser.addText(x - 66, y - 10, "Password:", 4, false);
-        controlLoginPass = panelLoginExistinguser.addTextInput(x - 66, y + 10, 200, 40, 4, 20, true, false);
-        y -= 55;
-        panelLoginExistinguser.addButtonBackground(x + 154, y, 120, 25);
-        panelLoginExistinguser.addText(x + 154, y, "Ok", 4, false);
-        controlLoginOk = panelLoginExistinguser.addButton(x + 154, y, 120, 25);
-        y += 30;
-        panelLoginExistinguser.addButtonBackground(x + 154, y, 120, 25);
-        panelLoginExistinguser.addText(x + 154, y, "Cancel", 4, false);
-        controlLoginCancel = panelLoginExistinguser.addButton(x + 154, y, 120, 25);
-        y += 30;
+        relY = y + 28;
+        panelLoginExistinguser.addButtonBackground(x - 116, relY, 200, 40);
+        panelLoginExistinguser.addText(x - 116, relY - 10, "Username:", 4, false);
+        controlLoginUser = panelLoginExistinguser.addTextInput(x - 116, relY + 10, 200, 40, 4, 12, false, false);
+        relY += 47;
+        panelLoginExistinguser.addButtonBackground(x - 66, relY, 200, 40);
+        panelLoginExistinguser.addText(x - 66, relY - 10, "Password:", 4, false);
+        controlLoginPass = panelLoginExistinguser.addTextInput(x - 66, relY + 10, 200, 40, 4, 20, true, false);
+        relY -= 55;
+        panelLoginExistinguser.addButtonBackground(x + 154, relY, 120, 25);
+        panelLoginExistinguser.addText(x + 154, relY, "Ok", 4, false);
+        controlLoginOk = panelLoginExistinguser.addButton(x + 154, relY, 120, 25);
+        relY += 30;
+        panelLoginExistinguser.addButtonBackground(x + 154, relY, 120, 25);
+        panelLoginExistinguser.addText(x + 154, relY, "Cancel", 4, false);
+        controlLoginCancel = panelLoginExistinguser.addButton(x + 154, relY, 120, 25);
+        relY += 30;
+        panelLoginExistinguser.addButtonBackground(x + 154, relY, 160, 25);
+        panelLoginExistinguser.addText(x + 154, relY, "I've lost my password", 4, false);
+        controlLoginRecover = panelLoginExistinguser.addButton(x + 154, relY, 160, 25);
         panelLoginExistinguser.setFocus(controlLoginUser);
     }
 
@@ -3986,6 +4090,8 @@ public class mudclient extends GameConnection {
             createMessageTabPanel();
             createLoginPanels();
             createAppearancePanel();
+            createRecoverCreatePanel();
+            createRecoverUserPanel();
             resetLoginScreenVariables();
             renderLoginScreenViewports();
         }
@@ -7486,15 +7592,20 @@ public class mudclient extends GameConnection {
                 String username = panelLoginNewuser.getText(controlRegisterUser);
                 String pass = panelLoginNewuser.getText(controlRegisterPassword);
                 String confPass = panelLoginNewuser.getText(controlRegisterConfirmPassword);
-                if(username == null || username.length() <= 0 || pass == null || pass.length() <= 0 || confPass == null || confPass.length() <= 0) {
+                if(username == null || username.length() == 0 || pass == null || pass.length() == 0 || confPass == null || confPass.length() == 0) {
+                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@Please fill in ALL requested information to continue!");
                     return;
                 }
                 if(!pass.equals(confPass)) {
                     panelLoginNewuser.updateText(controlRegisterStatus, "@yel@The two passwords entered are not the same as each other!");
                     return;
                 }
-                if(pass.length() < 5 || pass.length() > 20) {
-                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@Your password must be between 5 and 20 characters long.");
+                if(pass.length() < 5) {
+                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@Your password must be at least 5 letters long");
+                    return;
+                }
+                if (username.trim().equalsIgnoreCase(pass.trim())) {
+                    panelLoginNewuser.updateText(controlRegisterStatus, "@yel@Your password must not be the same as your username!");
                     return;
                 }
                 if(!panelLoginNewuser.isActivated(controlRegisterCheckbox)) {
@@ -7519,6 +7630,118 @@ public class mudclient extends GameConnection {
                 loginUser = panelLoginExistinguser.getText(controlLoginUser);
                 loginPass = panelLoginExistinguser.getText(controlLoginPass);
                 login(loginUser, loginPass, false);
+            }
+            if (panelLoginExistinguser.isClicked(controlLoginRecover)) {
+                loginUser = panelLoginExistinguser.getText(controlLoginUser);
+                if (loginUser.trim().length() == 0) {
+                    showLoginScreenStatus("You must enter your username to recover your password", "");
+                    return;
+                }
+
+                showLoginScreenStatus("Please wait...", "Connecting to server");
+
+                try {
+                    clientStream = new ClientStream(createSocket(server, port), this);
+                    clientStream.maxReadTries = maxReadTries;
+                    // originally packet id was 4, but 4 is used for 
+                    // cast_invitem. mudclient 177 used 220 for cast_invitem, 
+                    // so just swap it.
+                    clientStream.newPacket(220); 
+                    clientStream.putLong(Utility.username2hash(loginUser));
+                    clientStream.flushPacket();
+                    int response = clientStream.readStream();
+                    System.out.println("Getpq response: " + response);
+                    if (response == 0) {
+                        showLoginScreenStatus("Sorry, the recovery questions for this user have not been set", "");
+                        return;
+                    }
+
+                    for (int i = 0; i < 5; i++) {
+                       int length = clientStream.readStream(); 
+                       byte buffer[] = new byte[5000];
+                       clientStream.readBytes(length, buffer);
+                       String question = new String(buffer, 0, length);
+                       panelRecoverUser.updateText(controlRecoverQuestions[i], question);
+                    }
+
+                    if (recentRecoveryFail) {
+                        showLoginScreenStatus("Sorry, you have already attempted 1 reocvery, try again later", "");
+                        return;
+                    }
+
+                    loginScreen = 3;
+                    panelRecoverUser.updateText(controlRecoverInfo1, "@yel@To prove this is your account please provide the answers to");
+                    panelRecoverUser.updateText(controlRecoverInfo2, "@yel@your security questions. YOu will then be able to reset your password");
+
+                    for (int i = 0; i < 5; i++) {
+                        panelRecoverUser.updateText(controlRecoverAnswers[i], "");
+                    }
+
+                    panelRecoverUser.updateText(controlRecoverOldPassword, "");
+                    panelRecoverUser.updateText(controlRecoverNewPassword, "");
+                    panelRecoverUser.updateText(controlRecoverConfirmPassword, "");
+                } catch (Exception Ex) {
+                    showLoginScreenStatus("Sorry! Unable to connect.", "Check internet settings or try another world");
+                    return;
+                }
+            }
+        } else if (loginScreen == 3) {
+            panelRecoverUser.handleMouse(super.mouseX, super.mouseY, super.lastMouseButtonDown, super.mouseButtonDown);
+            if (panelRecoverUser.isClicked(controlRecoverSubmit)) {
+                String pass = panelRecoverUser.getText(controlRecoverNewPassword);
+                String confirmPass = panelRecoverUser.getText(controlRecoverConfirmPassword);
+
+                if (!pass.equalsIgnoreCase(confirmPass)) {
+                    showLoginScreenStatus("@yel@The two new passwords entered are not the same as each other!", "");
+                    return;
+                }
+
+                if (pass.length() < 5) {
+                    showLoginScreenStatus("@yel@Your new password must be at least 5 letters long", "");
+                    return;
+                }
+
+                showLoginScreenStatus("Please wait...", "Connecting to server");
+
+                try {
+                    clientStream = new ClientStream(createSocket(server, port), this);
+                    clientStream.maxReadTries = maxReadTries;
+                    clientStream.newPacket(233);
+                    clientStream.putLong(Utility.username2hash(loginUser));
+                    String oldPassword = Utility.formatAuthString(panelRecoverUser.getText(controlRecoverOldPassword), 20);
+                    clientStream.putString(oldPassword + Utility.formatAuthString(pass, 20));
+
+                    for (int i = 0; i < 5; i++) {
+                        clientStream.putLong(Utility.recovery2hash(panelRecoverUser.getText(controlRecoverAnswers[i])));
+                    }
+
+                    clientStream.flushPacket();
+
+                    int response = clientStream.readStream();
+                    System.out.println("Recover response: " + response);
+                    if (response == 0) {
+                        loginScreen = 2;
+                        showLoginScreenStatus("Sorry, recovery failed. You may try again in 1 hour", "");
+                        recentRecoveryFail = true;
+                        return;
+                    }
+
+                    if (response == 1) {
+                        loginScreen = 2;
+                        showLoginScreenStatus("Your pass has been reset. You may now use the new pass to login", "");
+                        return;
+                    }
+
+                    loginScreen = 2;
+                    showLoginScreenStatus("Recovery failed! Attempts exceeded?", "");
+                } catch (Exception Ex) {
+                    showLoginScreenStatus("Sorry! Unable to connect.", "Check internet settings or try another world");
+                    return;
+                }
+            }
+
+            if (panelRecoverUser.isClicked(controlRecoverCancel)) {
+                loginScreen = 0;
             }
         }
     }
@@ -7571,9 +7794,4 @@ public class mudclient extends GameConnection {
         gameModel.key = count + 10000;
         return gameModel;
     }
-    /* unused
-    private String recoveryQuestions[] = {
-            "Where were you born?", "What was your first teachers name?", "What is your fathers middle name?", "Who was your first best friend?", "What is your favourite vacation spot?", "What is your mothers middle name?", "What was your first pets name?", "What was the name of your first school?", "What is your mothers maiden name?", "Who was your first boyfriend/girlfriend?",
-            "What was the first computer game you purchased?", "Who is your favourite actor/actress?", "Who is your favourite author?", "Who is your favourite musician?", "Who is your favourite cartoon character?", "What is your favourite book?", "What is your favourite food?", "What is your favourite movie?"
-    };*/
 }

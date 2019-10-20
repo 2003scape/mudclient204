@@ -108,6 +108,24 @@ public class Utility {
         return (i >> 24 & 0xff) + "." + (i >> 16 & 0xff) + "." + (i >> 8 & 0xff) + "." + (i & 0xff);
     }
 
+	public static long recovery2hash(String answer) {
+		answer = answer.trim();
+		answer = answer.toLowerCase();
+		long hash = 0L;
+		int var3 = 0;
+
+		for (int i = 0; i < answer.length(); ++i) {
+			char c = answer.charAt(i);
+			if (c >= 'a' && c <= 'z' || c >= '0' && c <= '9') {
+				hash = hash * 47L * (hash - (long) (c * 6) - (long) (var3 * 7));
+				hash += (long) (c - 32 + var3 * c);
+				++var3;
+			}
+		}
+
+		return hash;
+	}
+
     public static long username2hash(String s) {
         String s1 = "";
         for (int i = 0; i < s.length(); i++) {
