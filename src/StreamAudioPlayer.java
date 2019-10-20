@@ -1,40 +1,60 @@
-//import sun.audio.AudioPlayer;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
-import java.io.InputStream;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 
-public class StreamAudioPlayer extends InputStream {
+public class StreamAudioPlayer {
+    final private int SAMPLE_RATE = 8000;
+    final private int BIT_SAMPLE_SIZE = 8;
+    final private int CHANNELS = 1;
 
-    byte buffer[];
-    int start;
-    int end;
+    private AudioFormat ulawFormat = new AudioFormat(AudioFormat.Encoding.ULAW, SAMPLE_RATE, BIT_SAMPLE_SIZE, CHANNELS,
+            1, SAMPLE_RATE, false);
+
+    private AudioFormat outputFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, ulawFormat.getSampleRate(),
+            ulawFormat.getSampleSizeInBits() * 2, ulawFormat.getChannels(), ulawFormat.getFrameSize() * 2,
+            ulawFormat.getFrameRate(), false);
+
+    private SourceDataLine sourceLine;
 
     public StreamAudioPlayer() {
-        //AudioPlayer.player.start(this);
+        try {
+            sourceLine = AudioSystem.getSourceDataLine(outputFormat);
+            sourceLine.open(outputFormat);
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+        }
     }
 
     public void stopPlayer() {
-        //AudioPlayer.player.stop(this);
+        sourceLine.close();
     }
 
-    public void writeStream(byte buf[], int off, int len) {
-        buffer = buf;
-        start = off;
-        end = off + len;
-    }
+    public synchronized void writeStream(byte buf[], int off, int len) {
+        AudioInputStream ulawStream = new AudioInputStream(new ByteArrayInputStream(buf, off, len), ulawFormat, len);
+        AudioInputStream pcmStream = AudioSystem.getAudioInputStream(outputFormat, ulawStream);
 
-    public int read(byte abyte0[], int i, int j) {
-        for (int k = 0; k < j; k++)
-            if (start < end)
-                abyte0[i + k] = buffer[start++];
-            else
-                abyte0[i + k] = -1;
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    byte[] pcmBytes = pcmStream.readAllBytes();
+                    sourceLine.start();
+                    sourceLine.write(pcmBytes, 0, pcmBytes.length);
+                    sourceLine.drain();
 
-        return j;
-    }
+                    do { 
+                        Thread.sleep(100);
+                    } while (sourceLine.isRunning());
 
-    public int read() {
-        byte abyte0[] = new byte[1];
-        read(abyte0, 0, 1);
-        return abyte0[0];
+                    sourceLine.stop();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }
