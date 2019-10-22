@@ -591,6 +591,12 @@ public class mudclient extends GameConnection {
     private int controlRecoverNewQuestionButtons[] = new int[5];
     private int controlRecoverCustomQuestionButtons[] = new int[5];
     private int controlRecoverCreateButton;
+    private boolean showDialogRecoveryInput;
+    private int recoverCurrentCustomQuestion = -1;
+    private int showChangePasswordStep;
+    private boolean changingRecoveryQuestions;
+    private String changePasswordOld;
+    private String changePasswordNew;
 
     public mudclient() {
         menuIndices = new int[menuMaxSize];
@@ -1248,6 +1254,8 @@ public class mudclient extends GameConnection {
             drawDialogReportAbuse();
         else if (showDialogReportAbuseStep == 2)
             drawDialogReportAbuseInput();
+        else if (showChangePasswordStep != 0)
+            drawDialogChangePassword();
         else if (showDialogSocialInput != 0) {
             drawDialogSocialInput();
         } else {
@@ -1646,8 +1654,10 @@ public class mudclient extends GameConnection {
                 panelAppearance.keyPress(i);
                 return;
             }
-            if (showDialogSocialInput == 0 && showDialogReportAbuseStep == 0 && !isSleeping && panelMessageTabs != null)
+            if (showChangePasswordStep == 0 && showDialogSocialInput == 0 && showDialogReportAbuseStep == 0 && !isSleeping && panelMessageTabs != null)
                 panelMessageTabs.keyPress(i);
+            if (showChangePasswordStep == 3 || showChangePasswordStep == 4 || showChangePasswordStep == 5)
+                showChangePasswordStep = 0;
         }
     }
 
@@ -1703,6 +1713,110 @@ public class mudclient extends GameConnection {
         }
         players[playerCount++] = character;
         return character;
+    }
+
+    public void drawDialogChangePassword() {
+        if (mouseButtonClick != 0) {
+            mouseButtonClick = 0;
+            if (super.mouseX < 106 || super.mouseY < 150 || super.mouseX > 406 || super.mouseY > 210) {
+                showChangePasswordStep = 0;
+                return;
+            }
+        }
+
+        short initY = 150;
+        surface.drawBox(106, initY, 300, 60, 0);
+        surface.drawBoxEdge(106, initY, 300, 60, 0xffffff);
+        int y = initY + 22;
+        String passwordInput;
+        int passwordLength;
+
+        if (showChangePasswordStep == 6) {
+            surface.drawStringCenter("Please enter your current password", 256, y, 4, 0xffffff);
+            y += 25;
+            passwordInput = "*";
+
+            for (passwordLength = 0; passwordLength < super.inputTextCurrent.length(); ++passwordLength) {
+                passwordInput = "X" + passwordInput;
+            }
+
+            surface.drawStringCenter(passwordInput, 256, y, 4, 0xffffff);
+
+            if (super.inputTextFinal.length() > 0) {
+                changePasswordOld = super.inputTextFinal;
+                super.inputTextCurrent = "";
+                super.inputTextFinal = "";
+                showChangePasswordStep = 1;
+                return;
+            }
+        } else if (showChangePasswordStep == 1) {
+            surface.drawStringCenter("Please enter your new password", 256, y, 4, 0xffffff);
+            y += 25;
+            passwordInput = "*";
+
+            for (passwordLength = 0; passwordLength < super.inputTextCurrent.length(); ++passwordLength) {
+                passwordInput = "X" + passwordInput;
+            }
+
+            surface.drawStringCenter(passwordInput, 256, y, 4, 0xffffff);
+
+            if (super.inputTextFinal.length() > 0) {
+                changePasswordNew = super.inputTextFinal;
+                super.inputTextCurrent = "";
+                super.inputTextFinal = "";
+
+                if (changePasswordNew.length() >= 5) {
+                    showChangePasswordStep = 2;
+                    return;
+                }
+
+                showChangePasswordStep = 5;
+                return;
+            }
+        } else if (showChangePasswordStep == 2) {
+            surface.drawStringCenter("Enter password again to confirm", 256, y, 4, 0xffffff);
+            y += 25;
+            passwordInput = "*";
+
+            for (passwordLength = 0; passwordLength < super.inputTextCurrent.length(); ++passwordLength) {
+                passwordInput = "X" + passwordInput;
+            }
+
+            surface.drawStringCenter(passwordInput, 256, y, 4, 0xffffff);
+
+            if (super.inputTextFinal.length() > 0) {
+                if (super.inputTextFinal.equalsIgnoreCase(changePasswordNew)) {
+                    showChangePasswordStep = 4;
+                    //this.send_cred(this.fib, this.gib);
+                    //changePasswordAttempt(changePasswordOld, changePasswordNew)
+                    return;
+                }
+
+                showChangePasswordStep = 3;
+                return;
+            }
+        } else {
+            if (showChangePasswordStep == 3) {
+                surface.drawStringCenter("Passwords do not match!", 256, y, 4, 0xffffff);
+                y += 25;
+                surface.drawStringCenter("Press any key to close", 256, y, 4, 0xffffff);
+                return;
+            }
+
+            if (showChangePasswordStep == 4) {
+                surface.drawStringCenter("Ok, your request has been sent", 256, y, 4, 0xffffff);
+                y += 25;
+                surface.drawStringCenter("Press any key to close", 256, y, 4, 0xffffff);
+                return;
+            }
+
+            if (showChangePasswordStep == 5) {
+                surface.drawStringCenter("Password must be at", 256, y, 4, 0xffffff);
+                y += 25;
+                surface.drawStringCenter("least 5 letters long", 256, y, 4, 0xffffff);
+            }
+        }
+
     }
 
     private void drawDialogSocialInput() {
@@ -1781,6 +1895,25 @@ public class mudclient extends GameConnection {
         if (super.mouseX > 236 && super.mouseX < 276 && super.mouseY > 193 && super.mouseY < 213)
             j = 0xffff00;
         surface.drawStringCenter("Cancel", 256, 208, 1, j);
+    }
+
+	public void drawDialogRecoveryInput() {
+        surface.interlace = false;
+        surface.blackScreen();
+        panelRecoverCreate.drawPanel();
+        
+        if (recoverCurrentCustomQuestion != -1) {
+            short initY = 150;
+            surface.drawBox(26, initY, 460, 60, 0);
+            surface.drawBoxEdge(26, initY, 460, 60, 0xffffff);
+            int y = initY + 22;
+            surface.drawStringCenter("Please enter your question", 256, y, 4, 0xffffff);
+            y += 25;
+            surface.drawStringCenter(super.inputTextCurrent + "*", 256, y, 4, 0xffffff);
+        }
+
+        surface.drawSprite(0, gameHeight, spriteMedia + 22);
+        surface.draw(graphics, 0, 0);
     }
 
     private void createRecoverUserPanel() {
@@ -4397,10 +4530,16 @@ public class mudclient extends GameConnection {
             surface.draw(graphics, 0, 0);
             return;
         }
+
         if (showAppearanceChange) {
             drawAppearancePanelCharacterSprites();
             return;
         }
+
+        if (showDialogRecoveryInput) {
+            drawDialogRecoveryInput();
+        }
+
         if (isSleeping) {
             surface.fade2black();
             if (Math.random() < 0.14999999999999999D)
@@ -5240,18 +5379,19 @@ public class mudclient extends GameConnection {
             else
                 surface.drawstring("Sound effects - @gre@on", x, y, 1, 0xffffff);
         y += 15;
-        surface.drawstring("To change your contact details,", x, y, 0, 0xffffff);
+        y += 5;
+        surface.drawstring("Security settings", x, y, 1, 0);
         y += 15;
-        surface.drawstring("password, recovery questions, etc..", x, y, 0, 0xffffff);
+        int textColour = 0xffffff;
+        if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4)
+            textColour = 0xffff00;
+        surface.drawstring("Change password", x, y, 1, textColour);
         y += 15;
-        surface.drawstring("please select 'account management'", x, y, 0, 0xffffff);
+        textColour = 0xffffff;
+        if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4)
+            textColour = 0xffff00;
+        surface.drawstring("Change recovery questions", x, y, 1, textColour);
         y += 15;
-        if (referid == 0)
-            surface.drawstring("from the runescape.com front page", x, y, 0, 0xffffff);
-        else if (referid == 1)
-            surface.drawstring("from the link below the gamewindow", x, y, 0, 0xffffff);
-        else
-            surface.drawstring("from the runescape front webpage", x, y, 0, 0xffffff);
         y += 15;
         y += 5;
         surface.drawstring("Privacy settings. Will be applied to", uiX + 3, y, 1, 0);
@@ -5282,74 +5422,83 @@ public class mudclient extends GameConnection {
         y += 5;
         surface.drawstring("Always logout when you finish", x, y, 1, 0);
         y += 15;
-        int k1 = 0xffffff;
+        textColour = 0xffffff;
         if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4)
-            k1 = 0xffff00;
-        surface.drawstring("Click here to logout", uiX + 3, y, 1, k1);
+            textColour = 0xffff00;
+        surface.drawstring("Click here to logout", uiX + 3, y, 1, textColour);
         if (!flag)
             return;
         int mouseX = super.mouseX - (surface.width2 - 199);
         int mouseY = super.mouseY - 36;
         if (mouseX >= 0 && mouseY >= 0 && mouseX < 196 && mouseY < 265) {
-            int l1 = surface.width2 - 199;
-            byte byte0 = 36;
-            int c1 = 196;// '\304';
-            int l = l1 + 3;
-            int j1 = byte0 + 30;
-            if (super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            uiX = surface.width2 - 199;
+            uiY = 36;
+            uiWidth = 196;
+            x = uiX + 3;
+            y = uiY + 30;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 optionCameraModeAuto = !optionCameraModeAuto;
                 super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_SETTINGS_GAME));
                 super.clientStream.putByte(0);
                 super.clientStream.putByte(optionCameraModeAuto ? 1 : 0);
                 super.clientStream.sendPacket();
             }
-            j1 += 15;
-            if (super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            y += 15;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 optionMouseButtonOne = !optionMouseButtonOne;
                 super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_SETTINGS_GAME));
                 super.clientStream.putByte(2);
                 super.clientStream.putByte(optionMouseButtonOne ? 1 : 0);
                 super.clientStream.sendPacket();
             }
-            j1 += 15;
-            if (members && super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            y += 15;
+            if (members && super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 optionSoundDisabled = !optionSoundDisabled;
                 super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_SETTINGS_GAME));
                 super.clientStream.putByte(3);
                 super.clientStream.putByte(optionSoundDisabled ? 1 : 0);
                 super.clientStream.sendPacket();
             }
-            j1 += 15;
-            j1 += 15;
-            j1 += 15;
-            j1 += 15;
-            j1 += 15;
+            y += 15;
+            y += 20;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
+                showChangePasswordStep = 6;
+                super.inputTextCurrent = "";
+                super.inputTextFinal = "";
+            }
+            y += 15;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
+                super.clientStream.newPacket(203);
+                super.clientStream.sendPacket();
+            }
+            y += 15;
+            y += 15;
             boolean flag1 = false;
-            j1 += 35;
-            if (super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            y += 35;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 super.settingsBlockChat = 1 - super.settingsBlockChat;
                 flag1 = true;
             }
-            j1 += 15;
-            if (super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            y += 15;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 super.settingsBlockPrivate = 1 - super.settingsBlockPrivate;
                 flag1 = true;
             }
-            j1 += 15;
-            if (super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            y += 15;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 super.settingsBlockTrade = 1 - super.settingsBlockTrade;
                 flag1 = true;
             }
-            j1 += 15;
-            if (members && super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1) {
+            y += 15;
+            if (members && super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
                 super.settingsBlockDuel = 1 - super.settingsBlockDuel;
                 flag1 = true;
             }
-            j1 += 15;
+            y += 15;
             if (flag1)
                 sendPrivacySettings(super.settingsBlockChat, super.settingsBlockPrivate, super.settingsBlockTrade, super.settingsBlockDuel);
-            j1 += 20;
-            if (super.mouseX > l && super.mouseX < l + c1 && super.mouseY > j1 - 12 && super.mouseY < j1 + 4 && mouseButtonClick == 1)
+            y += 20;
+            if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1)
                 sendLogout();
             mouseButtonClick = 0;
         }
