@@ -59,9 +59,7 @@ public class GameConnection extends GameShell {
             return;
         }
         try {
-            //this.username = user; 
             user = Utility.formatAuthString(user, 20);
-            //this.password = pass;
             pass = Utility.formatAuthString(pass, 20);
 
             showLoginScreenStatus("Please wait...", "Connecting to server");
@@ -77,7 +75,7 @@ public class GameConnection extends GameShell {
             }
             System.out.println("Verb: Session id: " + sessid);
 
-            clientStream.newPacket(2);
+            clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_REGISTER));
             clientStream.putShort(clientVersion);
             clientStream.putString(user);
             clientStream.putString(pass);
@@ -346,6 +344,16 @@ public class GameConnection extends GameShell {
                 showLoginScreenStatus("Sorry! Unable to connect.", "Check internet settings or try another world");
             }
         }
+    }
+
+    protected void changePassword(String oldPass, String newPass) {
+        oldPass = Utility.formatAuthString(oldPass, 20);
+        newPass = Utility.formatAuthString(newPass, 20);
+
+        clientStream.newPacket(25);
+        clientStream.putString(oldPass);
+        clientStream.putString(newPass);
+        clientStream.sendPacket();
     }
 
     protected void closeConnection() {

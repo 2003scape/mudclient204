@@ -7,17 +7,18 @@ import java.util.HashMap;
 public class v204 {
 
     public static HashMap<Command.Client, Integer> client = new HashMap<Command.Client, Integer>() {{
-        put(Command.Client.CL_TRADE_CONFIRM_ACCEPT, 104);
         put(Command.Client.CL_APPEARANCE, 235);
         put(Command.Client.CL_BANK_CLOSE, 212);
         put(Command.Client.CL_BANK_DEPOSIT, 23);
         put(Command.Client.CL_BANK_WITHDRAW, 22);
         put(Command.Client.CL_CAST_GROUND, 158);
+        put(Command.Client.CL_CAST_GROUNDITEM, 249);
         put(Command.Client.CL_CAST_INVITEM, 4);
         put(Command.Client.CL_CAST_NPC, 50);
         put(Command.Client.CL_CAST_OBJECT, 99);
         put(Command.Client.CL_CAST_PLAYER, 229);
         put(Command.Client.CL_CAST_SELF, 137);
+        put(Command.Client.CL_CAST_WALLOBJECT, 180);
         put(Command.Client.CL_CHAT, 216);
         put(Command.Client.CL_CHOOSE_OPTION, 116);
         put(Command.Client.CL_CLOSE_CONNECTION, 31);
@@ -30,7 +31,6 @@ public class v204 {
         put(Command.Client.CL_DUEL_SETTINGS, 8);
         put(Command.Client.CL_FRIEND_ADD, 195);
         put(Command.Client.CL_FRIEND_REMOVE, 167);
-        put(Command.Client.CL_CAST_GROUNDITEM, 249);
         put(Command.Client.CL_GROUNDITEM_TAKE, 247);
         put(Command.Client.CL_IGNORE_ADD, 132);
         put(Command.Client.CL_IGNORE_REMOVE, 241);
@@ -55,6 +55,12 @@ public class v204 {
         put(Command.Client.CL_PM, 218);
         put(Command.Client.CL_PRAYER_OFF, 254);
         put(Command.Client.CL_PRAYER_ON, 60);
+        put(Command.Client.CL_RECOVER_CANCEL, 196);
+        put(Command.Client.CL_RECOVER_REQUEST, 220);
+        put(Command.Client.CL_RECOVER_SET, 208);
+        put(Command.Client.CL_RECOVER_SET_REQUEST, 203);
+        put(Command.Client.CL_RECOVER_GET_QUESTIONS, 233);
+        put(Command.Client.CL_REGISTER, 2);
         put(Command.Client.CL_REPORT_ABUSE, 206);
         put(Command.Client.CL_SESSION, 32);
         put(Command.Client.CL_SETTINGS_GAME, 111);
@@ -64,6 +70,7 @@ public class v204 {
         put(Command.Client.CL_SHOP_SELL, 221);
         put(Command.Client.CL_SLEEP_WORD, 45);
         put(Command.Client.CL_TRADE_ACCEPT, 55);
+        put(Command.Client.CL_TRADE_CONFIRM_ACCEPT, 104);
         put(Command.Client.CL_TRADE_DECLINE, 230);
         put(Command.Client.CL_TRADE_ITEM_UPDATE, 46);
         put(Command.Client.CL_USEWITH_GROUNDITEM, 53);
@@ -71,12 +78,11 @@ public class v204 {
         put(Command.Client.CL_USEWITH_NPC, 135);
         put(Command.Client.CL_USEWITH_OBJECT, 115);
         put(Command.Client.CL_USEWITH_PLAYER, 113);
+        put(Command.Client.CL_USEWITH_WALLOBJECT, 161);
         put(Command.Client.CL_WALK, 187);
         put(Command.Client.CL_WALK_ACTION, 16);
         put(Command.Client.CL_WALL_OBJECT_COMMAND1, 14);
         put(Command.Client.CL_WALL_OBJECT_COMMAND2, 127);
-        put(Command.Client.CL_CAST_WALLOBJECT, 180);
-        put(Command.Client.CL_USEWITH_WALLOBJECT, 161);
     }};
 
     public static HashMap<Command.Server, Integer> server = new HashMap<Command.Server, Integer>() {{
@@ -84,6 +90,7 @@ public class v204 {
         put(Command.Server.SV_BANK_CLOSE, 203);
         put(Command.Server.SV_BANK_OPEN, 42);
         put(Command.Server.SV_BANK_UPDATE, 249);
+        put(Command.Server.SV_RECOVER_OPEN, 224);
         put(Command.Server.SV_CLOSE_CONNECTION, 4);
         put(Command.Server.SV_DUEL_ACCEPTED, 210);
         put(Command.Server.SV_DUEL_CLOSE, 225);

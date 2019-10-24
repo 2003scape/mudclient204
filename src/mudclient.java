@@ -571,7 +571,7 @@ public class mudclient extends GameConnection {
             "Where were you born?", "What was your first teachers name?", "What is your fathers middle name?", "Who was your first best friend?", "What is your favourite vacation spot?", "What is your mothers middle name?", "What was your first pets name?", "What was the name of your first school?", "What is your mothers maiden name?", "Who was your first boyfriend/girlfriend?",
             "What was the first computer game you purchased?", "Who is your favourite actor/actress?", "Who is your favourite author?", "Who is your favourite musician?", "Who is your favourite cartoon character?", "What is your favourite book?", "What is your favourite food?", "What is your favourite movie?"
     };
-    private boolean recentRecoveryFail;
+    private boolean recentRecoverFail;
     private Panel panelRecoverUser;
     private int controlRecoverQuestions[] = new int[5];
     private int controlRecoverInfo1;
@@ -584,19 +584,19 @@ public class mudclient extends GameConnection {
     private int controlRecoverCancel;
     private Panel panelRecoverCreate;
     private int controlRecoverCreateInfo;
-    private int selectedRecoveryIds[] = new int[]{0, 1, 2, 3, 4};
-    private String selectedRecoveryQuestions[] = new String[5];
+    private int selectedRecoverIds[] = new int[]{0, 1, 2, 3, 4};
+    private String selectedRecoverQuestions[] = new String[5];
     private int controlRecoverNewQuestions[] = new int[5];
     private int controlRecoverNewAnswers[] = new int[5];
     private int controlRecoverNewQuestionButtons[] = new int[5];
     private int controlRecoverCustomQuestionButtons[] = new int[5];
     private int controlRecoverCreateButton;
-    private boolean showDialogRecoveryInput;
-    private int recoverCurrentCustomQuestion = -1;
+    private boolean showRecoverChange;
+    private int recoverCustomQuestionIndex = -1;
     private int showChangePasswordStep;
-    private boolean changingRecoveryQuestions;
-    private String changePasswordOld;
-    private String changePasswordNew;
+    private String changePasswordOld = "";
+    private String changePasswordNew = "";
+    private int welcomeTipDay;
 
     public mudclient() {
         menuIndices = new int[menuMaxSize];
@@ -803,46 +803,6 @@ public class mudclient extends GameConnection {
         if (!optionSoundDisabled)
             // TODO dump this to test our PCM player too
             audioPlayer.writeStream(soundData, Utility.getDataFileOffset(s + ".pcm", soundData), Utility.getDataFileLength(s + ".pcm", soundData));
-    }
-
-    private void createRecoverCreatePanel() {
-        panelRecoverCreate = new Panel(surface, 100);
-        byte initY = 8;
-        controlRecoverCreateInfo = panelRecoverCreate.addText(256, initY, "@yel@Please provide 5 security questions in case you lose your password", 1, true);
-        int y = initY + 22;
-        panelRecoverCreate.addText(256, y, "If you ever lose your password, you will need these to prove you own your account.", 1, true);
-        y += 13;
-        panelRecoverCreate.addText(256, y, "Your answers are encrypted and are ONLY used for password recovery purposes.",
-        1, true);
-        y += 22;
-        panelRecoverCreate.addText(256, y, "@ora@IMPORTANT:@whi@ To recover your password you must give the EXACT same answers you", 1, true);
-        y += 13;
-        panelRecoverCreate.addText(256, y, "give here. If you think you might forget an answer, or someone else could guess the", 1, true);
-        y += 13;
-        panelRecoverCreate.addText(256, y, "answer, then press the 'different question' button to get a better question.", 1, true);
-        y += 35;
-
-        for (int i = 0; i < 5; i++) {
-            panelRecoverCreate.addButtonBackground(170, y, 310, 30);
-            selectedRecoveryQuestions[i] = recoveryQuestions[selectedRecoveryIds[i]];
-            controlRecoverNewQuestions[i] = panelRecoverCreate.addText(170, y - 7, i + 1 + ": " + recoveryQuestions[selectedRecoveryIds[i]], 1, true);
-            controlRecoverNewAnswers[i] = panelRecoverCreate.addTextInput(170, y + 7, 310, 30, 1, 80, false, true);
-            panelRecoverCreate.addButtonBackground(370, y, 80, 30);
-            panelRecoverCreate.addText(370, y - 7, "Different", 1, true);
-            panelRecoverCreate.addText(370, y + 7, "Question", 1, true);
-            controlRecoverNewQuestionButtons[i] = panelRecoverCreate.addButton(370, y, 80, 30);
-            panelRecoverCreate.addButtonBackground(455, y, 80, 30);
-            panelRecoverCreate.addText(455, y - 7, "Enter own", 1, true);
-            panelRecoverCreate.addText(455, y + 7, "Question", 1, true);
-            controlRecoverCustomQuestionButtons[i] = panelRecoverCreate.addButton(455, y, 80, 30);
-            y += 35;
-        }
-
-        panelRecoverCreate.setFocus(controlRecoverNewAnswers[0]);
-        y += 10;
-        panelRecoverCreate.addButtonBackground(256, y, 250, 30);
-        panelRecoverCreate.addText(256, y, "Click here when finished", 4, true);
-        controlRecoverCreateButton = panelRecoverCreate.addButton(256, y, 250, 30);
     }
 
     private void drawDialogReportAbuse() {
@@ -1654,6 +1614,10 @@ public class mudclient extends GameConnection {
                 panelAppearance.keyPress(i);
                 return;
             }
+            if (showRecoverChange && panelRecoverCreate != null) {
+                panelRecoverCreate.keyPress(i);
+                return;
+            }
             if (showChangePasswordStep == 0 && showDialogSocialInput == 0 && showDialogReportAbuseStep == 0 && !isSleeping && panelMessageTabs != null)
                 panelMessageTabs.keyPress(i);
             if (showChangePasswordStep == 3 || showChangePasswordStep == 4 || showChangePasswordStep == 5)
@@ -1787,8 +1751,7 @@ public class mudclient extends GameConnection {
             if (super.inputTextFinal.length() > 0) {
                 if (super.inputTextFinal.equalsIgnoreCase(changePasswordNew)) {
                     showChangePasswordStep = 4;
-                    //this.send_cred(this.fib, this.gib);
-                    //changePasswordAttempt(changePasswordOld, changePasswordNew)
+                    changePassword(changePasswordOld, changePasswordNew);
                     return;
                 }
 
@@ -1816,7 +1779,6 @@ public class mudclient extends GameConnection {
                 surface.drawStringCenter("least 5 letters long", 256, y, 4, 0xffffff);
             }
         }
-
     }
 
     private void drawDialogSocialInput() {
@@ -1897,12 +1859,153 @@ public class mudclient extends GameConnection {
         surface.drawStringCenter("Cancel", 256, 208, 1, j);
     }
 
-	public void drawDialogRecoveryInput() {
+    private void createRecoverCreatePanel() {
+        panelRecoverCreate = new Panel(surface, 100);
+        byte initY = 8;
+        controlRecoverCreateInfo = panelRecoverCreate.addText(256, initY, "@yel@Please provide 5 security questions in case you lose your password", 1, true);
+        int y = initY + 22;
+        panelRecoverCreate.addText(256, y, "If you ever lose your password, you will need these to prove you own your account.", 1, true);
+        y += 13;
+        panelRecoverCreate.addText(256, y, "Your answers are encrypted and are ONLY used for password recovery purposes.",
+        1, true);
+        y += 22;
+        panelRecoverCreate.addText(256, y, "@ora@IMPORTANT:@whi@ To recover your password you must give the EXACT same answers you", 1, true);
+        y += 13;
+        panelRecoverCreate.addText(256, y, "give here. If you think you might forget an answer, or someone else could guess the", 1, true);
+        y += 13;
+        panelRecoverCreate.addText(256, y, "answer, then press the 'different question' button to get a better question.", 1, true);
+        y += 35;
+
+        for (int i = 0; i < 5; i++) {
+            panelRecoverCreate.addButtonBackground(170, y, 310, 30);
+            selectedRecoverQuestions[i] = recoveryQuestions[selectedRecoverIds[i]];
+            controlRecoverNewQuestions[i] = panelRecoverCreate.addText(170, y - 7, i + 1 + ": " + recoveryQuestions[selectedRecoverIds[i]], 1, true);
+            controlRecoverNewAnswers[i] = panelRecoverCreate.addTextInput(170, y + 7, 310, 30, 1, 80, false, true);
+            panelRecoverCreate.addButtonBackground(370, y, 80, 30);
+            panelRecoverCreate.addText(370, y - 7, "Different", 1, true);
+            panelRecoverCreate.addText(370, y + 7, "Question", 1, true);
+            controlRecoverNewQuestionButtons[i] = panelRecoverCreate.addButton(370, y, 80, 30);
+            panelRecoverCreate.addButtonBackground(455, y, 80, 30);
+            panelRecoverCreate.addText(455, y - 7, "Enter own", 1, true);
+            panelRecoverCreate.addText(455, y + 7, "Question", 1, true);
+            controlRecoverCustomQuestionButtons[i] = panelRecoverCreate.addButton(455, y, 80, 30);
+            y += 35;
+        }
+
+        panelRecoverCreate.setFocus(controlRecoverNewAnswers[0]);
+        y += 10;
+        panelRecoverCreate.addButtonBackground(256, y, 250, 30);
+        panelRecoverCreate.addText(256, y, "Click here when finished", 4, true);
+        controlRecoverCreateButton = panelRecoverCreate.addButton(256, y, 250, 30);
+    }
+
+    public void handlePanelRecoverCreateControls() {
+        if (recoverCustomQuestionIndex != -1) {
+            if (super.inputTextFinal.length() > 0) {
+                selectedRecoverQuestions[recoverCustomQuestionIndex] = super.inputTextFinal;
+                panelRecoverCreate.updateText(controlRecoverNewQuestions[recoverCustomQuestionIndex], recoverCustomQuestionIndex + 1 + ": " + selectedRecoverQuestions[recoverCustomQuestionIndex]);
+                panelRecoverCreate.updateText(controlRecoverNewAnswers[recoverCustomQuestionIndex], "");
+                recoverCustomQuestionIndex = -1;
+            }
+        } else {
+            panelRecoverCreate.handleMouse(super.mouseX, super.mouseY, super.lastMouseButtonDown, super.mouseButtonDown);
+
+            for (int i = 0; i < 5; ++i) {
+                if (panelRecoverCreate.isClicked(controlRecoverNewQuestionButtons[i])) {
+                    boolean questionNotInUse = false;
+
+                    while (!questionNotInUse) {
+                        selectedRecoverIds[i] = (selectedRecoverIds[i] + 1) % recoveryQuestions.length;
+                        questionNotInUse = true;
+
+                        for (int j = 0; j < 5; ++j) {
+                            if (j != i && selectedRecoverIds[j] == selectedRecoverIds[i]) {
+                                questionNotInUse = false;
+                            }
+                        }
+                    }
+
+                    selectedRecoverQuestions[i] = recoveryQuestions[selectedRecoverIds[i]];
+                    panelRecoverCreate.updateText(controlRecoverNewQuestions[i], i + 1 + ": " + recoveryQuestions[selectedRecoverIds[i]]);
+                    panelRecoverCreate.updateText(controlRecoverNewAnswers[i], "");
+                }
+            }
+
+            for (int i = 0; i < 5; ++i) {
+                if (panelRecoverCreate.isClicked(controlRecoverCustomQuestionButtons[i])) {
+                    recoverCustomQuestionIndex = i;
+                    super.inputTextCurrent = "";
+                    super.inputTextFinal = "";
+                }
+            }
+
+            if (panelRecoverCreate.isClicked(controlRecoverCreateButton)) {
+                int questionIndex = 0;
+
+                while (true) {
+                    if (questionIndex >= 5) {
+                        for (int i = 0; i < 5; ++i) {
+                            String var5 = panelRecoverCreate.getText(controlRecoverNewAnswers[i]);
+
+                            for (int j = 0; j < i; ++j) {
+                                String var7 = panelRecoverCreate.getText(controlRecoverNewAnswers[j]);
+                                if (var5.equalsIgnoreCase(var7)) {
+                                    panelRecoverCreate.updateText(controlRecoverCreateInfo, "@yel@Each question must have a different answer");
+                                    return;
+                                }
+                            }
+                        }
+
+                        super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_RECOVER_SET));
+
+                        for (int i = 0; i < 5; ++i) {
+                            String question = selectedRecoverQuestions[i];
+                            if (question == null || question.length() == 0) {
+                                question = String.valueOf(i + 1);
+                            }
+
+                            if (question.length() > 50) {
+                                question = question.substring(0, 50);
+                            }
+
+                            super.clientStream.putByte(question.length());
+                            super.clientStream.putString(question);
+                            String answer = panelRecoverCreate.getText(controlRecoverNewAnswers[i]);
+                            super.clientStream.putLong(Utility.recovery2hash(answer));
+                        }
+
+                        super.clientStream.sendPacket();
+
+                        for (int i = 0; i < 5; ++i) {
+                            selectedRecoverIds[i] = i;
+                            selectedRecoverQuestions[i] = recoveryQuestions[selectedRecoverIds[i]];
+                            panelRecoverCreate.updateText(controlRecoverNewAnswers[i], "");
+                            panelRecoverCreate.updateText(controlRecoverNewQuestions[i], i + 1 + ": " + recoveryQuestions[selectedRecoverIds[i]]);
+                        }
+
+                        surface.blackScreen();
+                        showRecoverChange = false;
+                        break;
+                    }
+
+                    String answer = panelRecoverCreate.getText(controlRecoverNewAnswers[questionIndex]);
+                    if (answer == null || answer.length() < 3) {
+                        panelRecoverCreate.updateText(controlRecoverCreateInfo, "@yel@Please provide a longer answer to question: " + (questionIndex + 1));
+                        return;
+                    }
+
+                    ++questionIndex;
+                }
+            }
+        }
+    }
+
+    public void drawRecoverCreatePanel() {
         surface.interlace = false;
         surface.blackScreen();
         panelRecoverCreate.drawPanel();
         
-        if (recoverCurrentCustomQuestion != -1) {
+        if (recoverCustomQuestionIndex != -1) {
             short initY = 150;
             surface.drawBox(26, initY, 460, 60, 0);
             surface.drawBoxEdge(26, initY, 460, 60, 0xffffff);
@@ -2019,9 +2122,7 @@ public class mudclient extends GameConnection {
     }
 
     private void drawDialogWelcome() {
-        int i = 65;
-        if (welcomeRecoverySetDays != 201)
-            i += 60;
+        int i = 142;
         if (welcomeUnreadMessages > 0)
             i += 60;
         if (welcomeLastLoggedInIP != 0)
@@ -2061,41 +2162,82 @@ public class mudclient extends GameConnection {
             y += 15;
             y += 15;
         }
-        if (welcomeRecoverySetDays != 201) // this is an odd way of storing recovery day settings
-        {
-            if (welcomeRecoverySetDays == 200) // and this
-            {
-                surface.drawStringCenter("You have not yet set any password recovery questions.", 256, y, 1, 0xff8000);
+        if (welcomeRecoverySetDays == 0) {
+            y += 7;
+            surface.drawStringCenter("Security tip of the day", 256, y, 1, 0xff0000);
+            y += 15;
+            if (welcomeTipDay == 0) {
+                surface.drawStringCenter("Don't tell ANYONE your password or recovery questions!", 256, y, 1, 0xffffff);
                 y += 15;
-                surface.drawStringCenter("We strongly recommend you do so now to secure your account.", 256, y, 1, 0xff8000);
+                surface.drawStringCenter("Not even people claiming to be Jagex staff.", 256, y, 1, 0xffffff);
                 y += 15;
-                surface.drawStringCenter("Do this from the 'account management' area on our front webpage", 256, y, 1, 0xff8000);
+            } else if (welcomeTipDay == 1) {
+                surface.drawStringCenter("Never enter your password or recovery questions into ANY", 256, y, 1, 0xffffff);
                 y += 15;
-            } else {
-                String s1;
-                if (welcomeRecoverySetDays == 0)
-                    s1 = "Earlier today";
-                else if (welcomeRecoverySetDays == 1)
-                    s1 = "Yesterday";
-                else
-                    s1 = welcomeRecoverySetDays + " days ago";
-                surface.drawStringCenter(s1 + " you changed your recovery questions", 256, y, 1, 0xff8000);
+                surface.drawStringCenter("website other than this one - Not even if it looks similar.", 256, y, 1, 0xffffff);
                 y += 15;
-                surface.drawStringCenter("If you do not remember making this change then cancel it immediately", 256, y, 1, 0xff8000);
+            } else if (welcomeTipDay == 2) {
+                surface.drawStringCenter("Don't use RuneScape cheats, helpers, or automaters.", 256, y, 1, 0xffffff);
                 y += 15;
-                surface.drawStringCenter("Do this from the 'account management' area on our front webpage", 256, y, 1, 0xff8000);
+                surface.drawStringCenter("These programs WILL steal your password.", 256, y, 1, 0xffffff);
+                y += 15;
+            } else if (welcomeTipDay == 3) {
+                surface.drawStringCenter("Watch out for fake emails, and fake staff. Real staff", 256, y, 1, 0xffffff);
+                y += 15;
+                surface.drawStringCenter("will NEVER ask you for your password or recovery questions!", 256, y, 1, 0xffffff);
+                y += 15;
+            } else if (welcomeTipDay == 4) {
+                surface.drawStringCenter("Use a password your friends won't guess. Do NOT use your name!", 256, y, 1, 0xffffff);
+                y += 15;
+                surface.drawStringCenter("Choose a unique password which you haven't used anywhere else", 256, y, 1, 0xffffff);
+                y += 15;
+            } else if (welcomeTipDay == 5) {
+                surface.drawStringCenter("If possible only play runescape from your own computer", 256, y, 1, 0xffffff);
+                y += 15;
+                surface.drawStringCenter("Other machines could have been tampered with to steal your pass", 256, y, 1, 0xffffff);
                 y += 15;
             }
+            y += 22;
+            int textColour = 0xffffff;
+            if (super.mouseY > y - 12 && super.mouseY <= y && super.mouseX > 106 && super.mouseX < 406)
+                textColour = 0xff0000;
+            surface.drawStringCenter("Click here to close window", 256, y, 1, textColour);
+            if (mouseButtonClick == 1) {
+                if (textColour == 0xff0000)
+                    showDialogWelcome = false;
+                if ((super.mouseX < 86 || super.mouseX > 426) && (super.mouseY < 167 - i / 2 || super.mouseY > 167 + i / 2))
+                    showDialogWelcome = false;
+            }
+        } else {
+            String s1;
+            if (welcomeRecoverySetDays == 0)
+                s1 = "Earlier today";
+            else if (welcomeRecoverySetDays == 1)
+                s1 = "Yesterday";
+            else
+                s1 = welcomeRecoverySetDays + " days ago";
+            surface.drawStringCenter(s1 + " you changed your recovery questions", 256, y, 1, 0xff8000);
             y += 15;
-        }
-        int l = 0xffffff;
-        if (super.mouseY > y - 12 && super.mouseY <= y && super.mouseX > 106 && super.mouseX < 406)
-            l = 0xff0000;
-        surface.drawStringCenter("Click here to close window", 256, y, 1, l);
-        if (mouseButtonClick == 1) {
-            if (l == 0xff0000)
+            surface.drawStringCenter("If you do not remember making this change then", 256, y, 1, 0xff8000);
+            y += 15;
+            surface.drawStringCenter("cancel it and change your password immediately!", 256, y, 1, 0xff8000);
+            y += 15;
+            y += 15;
+            int textColour = 0xffffff;
+            if (super.mouseY > y - 12 && super.mouseY <= y && super.mouseX > 106 && super.mouseX < 406)
+                textColour = 0xff0000;
+            surface.drawStringCenter("No that wasn't me - Cancel the request!", 256, y, 1, textColour);
+            if (textColour == 0xff0000 && mouseButtonClick == 1) {
+                super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_RECOVER_CANCEL));
+                super.clientStream.sendPacket();
                 showDialogWelcome = false;
-            if ((super.mouseX < 86 || super.mouseX > 426) && (super.mouseY < 167 - i / 2 || super.mouseY > 167 + i / 2))
+            }
+            y += 15;
+            textColour = 0xffffff;
+            if (super.mouseY > y - 12 && super.mouseY <= y && super.mouseX > 106 && super.mouseX < 406)
+                textColour = 0xff0000;
+            surface.drawStringCenter("That's ok, activate the new questions in " + (14 - welcomeRecoverySetDays) + " days time", 256, y, 1, textColour);
+            if (textColour == 0xff0000 && mouseButtonClick == 1)
                 showDialogWelcome = false;
         }
         mouseButtonClick = 0;
@@ -2160,6 +2302,10 @@ public class mudclient extends GameConnection {
             combatTimeout--;
         if (showAppearanceChange) {
             handleAppearancePanelControls();
+            return;
+        }
+        if (showRecoverChange) {
+            handlePanelRecoverCreateControls();
             return;
         }
         for (int i = 0; i < playerCount; i++) {
@@ -4536,8 +4682,9 @@ public class mudclient extends GameConnection {
             return;
         }
 
-        if (showDialogRecoveryInput) {
-            drawDialogRecoveryInput();
+        if (showRecoverChange) {
+            drawRecoverCreatePanel();
+            return;
         }
 
         if (isSleeping) {
@@ -5468,7 +5615,7 @@ public class mudclient extends GameConnection {
             }
             y += 15;
             if (super.mouseX > x && super.mouseX < x + uiWidth && super.mouseY > y - 12 && super.mouseY < y + 4 && mouseButtonClick == 1) {
-                super.clientStream.newPacket(203);
+                super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_RECOVER_SET_REQUEST));
                 super.clientStream.sendPacket();
             }
             y += 15;
@@ -6869,6 +7016,18 @@ public class mudclient extends GameConnection {
 
                 return;
             }
+            if (opcode == Command.Server.SV_RECOVER_OPEN) {
+                showRecoverChange = true;
+
+                for (int i = 0; i < 5; i++) {
+                    selectedRecoverIds[i] = i;
+                    selectedRecoverQuestions[i] = recoveryQuestions[i];
+                    panelRecoverCreate.updateText(controlRecoverNewAnswers[i], "");
+                    panelRecoverCreate.updateText(controlRecoverNewQuestions[i], i + 1 + ": " + selectedRecoverQuestions[i]);
+                }
+
+                return;
+            }
             if (opcode == Command.Server.SV_BANK_OPEN) {
                 showDialogBank = true;
                 int l4 = 1;
@@ -7115,6 +7274,7 @@ public class mudclient extends GameConnection {
                     welcomeLastLoggedInDays = Utility.getUnsignedShort(pdata, 5);
                     welcomeRecoverySetDays = pdata[7] & 0xff;
                     welcomeUnreadMessages = Utility.getUnsignedShort(pdata, 8);
+                    welcomeTipDay = (int) (Math.random() * 6.0D);
                     showDialogWelcome = true;
                     welcomScreenAlreadyShown = true;
                     welcomeLastLoggedInHost = null;
@@ -7790,15 +7950,15 @@ public class mudclient extends GameConnection {
                 showLoginScreenStatus("Please wait...", "Connecting to server");
 
                 try {
-                    clientStream = new ClientStream(createSocket(server, port), this);
-                    clientStream.maxReadTries = maxReadTries;
+                    super.clientStream = new ClientStream(createSocket(server, port), this);
+                    super.clientStream.maxReadTries = maxReadTries;
                     // originally packet id was 4, but 4 is used for 
                     // cast_invitem. mudclient 177 used 220 for cast_invitem, 
                     // so just swap it.
-                    clientStream.newPacket(220); 
-                    clientStream.putLong(Utility.username2hash(loginUser));
-                    clientStream.flushPacket();
-                    int response = clientStream.readStream();
+                    super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_RECOVER_REQUEST));
+                    super.clientStream.putLong(Utility.username2hash(loginUser));
+                    super.clientStream.flushPacket();
+                    int response = super.clientStream.readStream();
                     System.out.println("Getpq response: " + response);
                     if (response == 0) {
                         showLoginScreenStatus("Sorry, the recovery questions for this user have not been set", "");
@@ -7806,14 +7966,14 @@ public class mudclient extends GameConnection {
                     }
 
                     for (int i = 0; i < 5; i++) {
-                       int length = clientStream.readStream(); 
+                       int length = super.clientStream.readStream(); 
                        byte buffer[] = new byte[5000];
-                       clientStream.readBytes(length, buffer);
+                       super.clientStream.readBytes(length, buffer);
                        String question = new String(buffer, 0, length);
                        panelRecoverUser.updateText(controlRecoverQuestions[i], question);
                     }
 
-                    if (recentRecoveryFail) {
+                    if (recentRecoverFail) {
                         showLoginScreenStatus("Sorry, you have already attempted 1 reocvery, try again later", "");
                         return;
                     }
@@ -7853,25 +8013,25 @@ public class mudclient extends GameConnection {
                 showLoginScreenStatus("Please wait...", "Connecting to server");
 
                 try {
-                    clientStream = new ClientStream(createSocket(server, port), this);
-                    clientStream.maxReadTries = maxReadTries;
-                    clientStream.newPacket(233);
-                    clientStream.putLong(Utility.username2hash(loginUser));
+                    super.clientStream = new ClientStream(createSocket(server, port), this);
+                    super.clientStream.maxReadTries = maxReadTries;
+                    super.clientStream.newPacket(Opcode.getClient(Version.CLIENT, Command.Client.CL_RECOVER_GET_QUESTIONS));
+                    super.clientStream.putLong(Utility.username2hash(loginUser));
                     String oldPassword = Utility.formatAuthString(panelRecoverUser.getText(controlRecoverOldPassword), 20);
-                    clientStream.putString(oldPassword + Utility.formatAuthString(pass, 20));
+                    super.clientStream.putString(oldPassword + Utility.formatAuthString(pass, 20));
 
                     for (int i = 0; i < 5; i++) {
-                        clientStream.putLong(Utility.recovery2hash(panelRecoverUser.getText(controlRecoverAnswers[i])));
+                        super.clientStream.putLong(Utility.recovery2hash(panelRecoverUser.getText(controlRecoverAnswers[i])));
                     }
 
-                    clientStream.flushPacket();
+                    super.clientStream.flushPacket();
 
-                    int response = clientStream.readStream();
+                    int response = super.clientStream.readStream();
                     System.out.println("Recover response: " + response);
                     if (response == 0) {
                         loginScreen = 2;
                         showLoginScreenStatus("Sorry, recovery failed. You may try again in 1 hour", "");
-                        recentRecoveryFail = true;
+                        recentRecoverFail = true;
                         return;
                     }
 
